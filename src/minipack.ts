@@ -26,17 +26,16 @@
  * and others are skipped to make this example as simple as possible.
  */
 
-const fs = require('fs');
-const path = require('path');
-const babylon = require('babylon');
-const traverse = require('babel-traverse').default;
-const {transformFromAst} = require('babel-core');
+import fs from 'fs';
+import path from 'path';
+import babylon from 'babylon';
+import traverse from 'babel-traverse';
+import { transformFromAst } from 'babel-core';
 
 let ID = 0;
-
 // We start by creating a function that will accept a path to a file, read
 // its contents, and extract its dependencies.
-function createAsset(filename) {
+function createAsset(filename: string) {
   // Read the content of the file as a string.
   const content = fs.readFileSync(filename, 'utf-8');
 
@@ -66,7 +65,7 @@ function createAsset(filename) {
     // that you can't import a variable, or conditionally import another module.
     // Every time we see an import statement we can just count its value as a
     // dependency.
-    ImportDeclaration: ({node}) => {
+    ImportDeclaration: ({ node }) => {
       // We push the value that we import into the dependencies array.
       dependencies.push(node.source.value);
     },
@@ -83,7 +82,7 @@ function createAsset(filename) {
   // The `presets` option is a set of rules that tell Babel how to transpile
   // our code. We use `babel-preset-env` to transpile our code to something
   // that most browsers can run.
-  const {code} = transformFromAst(ast, null, {
+  const { code } = transformFromAst(ast, null, {
     presets: ['env'],
   });
 
