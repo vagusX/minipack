@@ -26,17 +26,24 @@
  * and others are skipped to make this example as simple as possible.
  */
 
-const fs = require('fs');
-const path = require('path');
-const babylon = require('babylon');
-const traverse = require('babel-traverse').default;
-const {transformFromAst} = require('babel-core');
+import fs from 'fs';
+import path from 'path';
+import babylon from 'babylon';
+import traverse from 'babel-traverse';
+import { transformFromAst } from 'babel-core';
+
+interface Graph {
+  id: number;
+  filename: string;
+  dependencies: string[];
+  code: string | undefined;
+  mapping: Record<string, number>;
+}
 
 let ID = 0;
-
 // We start by creating a function that will accept a path to a file, read
 // its contents, and extract its dependencies.
-function createAsset(filename) {
+function createAsset(filename: string): Graph {
   // Read the content of the file as a string.
   const content = fs.readFileSync(filename, 'utf-8');
 
@@ -57,7 +64,7 @@ function createAsset(filename) {
   });
 
   // This array will hold the relative paths of modules this module depends on.
-  const dependencies = [];
+  const dependencies: string[] = [];
 
   // We traverse the AST to try and understand which modules this module depends
   // on. To do that, we check every import declaration in the AST.
@@ -66,7 +73,7 @@ function createAsset(filename) {
     // that you can't import a variable, or conditionally import another module.
     // Every time we see an import statement we can just count its value as a
     // dependency.
-    ImportDeclaration: ({node}) => {
+    ImportDeclaration: ({ node }) => {
       // We push the value that we import into the dependencies array.
       dependencies.push(node.source.value);
     },
@@ -83,7 +90,7 @@ function createAsset(filename) {
   // The `presets` option is a set of rules that tell Babel how to transpile
   // our code. We use `babel-preset-env` to transpile our code to something
   // that most browsers can run.
-  const {code} = transformFromAst(ast, null, {
+  const { code } = transformFromAst(ast, undefined, {
     presets: ['env'],
   });
 
@@ -93,6 +100,7 @@ function createAsset(filename) {
     filename,
     dependencies,
     code,
+    mapping: {},
   };
 }
 
@@ -103,7 +111,7 @@ function createAsset(filename) {
 // dependencies. We will keep that going until we figure out about every module
 // in the application and how they depend on one another. This understanding of
 // a project is called the dependency graph.
-function createGraph(entry) {
+function createGraph(entry: string): Graph[] {
   // Start by parsing the entry file.
   const mainAsset = createAsset(entry);
 
@@ -161,7 +169,7 @@ function createGraph(entry) {
 //
 // That function will receive just one parameter: An object with information
 // about every module in our graph.
-function bundle(graph) {
+function bundle(graph: Graph[]) {
   let modules = '';
 
   // Before we get to the body of that function, we'll construct the object that
